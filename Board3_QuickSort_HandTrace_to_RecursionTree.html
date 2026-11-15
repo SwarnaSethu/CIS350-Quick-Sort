@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Board 3 — Quick Sort, Step by Step (Revised Trace V5)</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&amp;family=Kalam:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --ink:#16233A; --acc:#0B6BCB; --acc-lt:#EAF1F6; --new:#D98F2B; --new-lt:#FBEBD3;
+    --green:#1F7A3D; --green-lt:#DCEFE1; --purple:#6B3FA0; --purple-lt:#F1E8FB; --grey:#595959;
+    --pill:#D9E8F5; --pill-border:#AFC9E3; --card-border:#D5D5D5; --shaded:#F2F2F2;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; margin:0; }
+  body{ display:flex; flex-direction:column; font-family:'Kalam', cursive; color:var(--ink);
+    background-color:#fffdf8; background-image: radial-gradient(#d9d9d9 1px, transparent 1px); background-size:18px 18px; }
+
+  header.topbar{ padding:10px 20px; border-bottom:2.5px solid var(--acc); background:#fff; flex-shrink:0; }
+  header.topbar h1{ font-family:'Architects Daughter', cursive; font-size:20px; margin:0; text-align:center; }
+  header.topbar p{ text-align:center; margin:2px 0 0 0; color:var(--grey); font-size:12.5px; }
+  .app-shell{ display:flex; flex:1; min-height:0; }
+  .rail{ width:250px; flex-shrink:0; border-right:2.5px solid var(--acc); background:#fff; overflow-y:auto; padding:10px 0 70px 0; }
+  .rail-item{ padding:10px 16px; font-size:13px; cursor:pointer; border-left:4px solid transparent; color:var(--grey); line-height:1.3; }
+  .rail-item .n{ font-weight:700; color:var(--acc); margin-right:4px; }
+  .rail-item:hover{ background:var(--acc-lt); }
+  .rail-item.active{ border-left-color:var(--acc); color:var(--ink); font-weight:700; background:var(--acc-lt); }
+  .stage{ flex:1; overflow:auto; padding:26px 34px 90px 34px; scroll-behavior:smooth; }
+  /* If a slide is wider than the available stage, let the stage scroll horizontally. */
+  .slide{ min-width:0; }
+  .slide.wide{ min-width:0; }
+  .slide.wide iframe{ min-width:0; }
+  .slide{ display:none; max-width:1000px; margin:0 auto; }
+  .slide.wide{max-width:none}
+.slide.active{ display:block; animation:fadein .18s ease-out; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .navbar{ position:fixed; left:250px; right:0; bottom:0; background:#fff; border-top:2.5px solid var(--acc); padding:9px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 -2px 8px rgba(0,0,0,.05); }
+  .nav-btn{ font-family:'Kalam', cursive; font-weight:700; font-size:14px; border:2px solid var(--acc); background:#fff; color:var(--acc); border-radius:20px; padding:7px 18px; cursor:pointer; }
+  .nav-btn:disabled{ opacity:.3; cursor:default; }
+  .nav-btn.primary{ background:var(--acc); color:#fff; }
+  .step-indicator{ font-size:13px; color:var(--grey); }
+  .slide-title{ font-family:'Architects Daughter', cursive; font-size:25px; margin:0 0 3px 0; color:var(--ink); }
+  .slide-sub{ color:var(--grey); font-size:14px; margin:0 0 16px 0; }
+
+  .grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:18px; margin-bottom:18px; }
+  .panel{ border:2px solid #7fb3e0; border-radius:14px; background:#fff; padding:12px 14px 14px 14px; }
+  .panel-head{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .num{ width:26px; height:26px; border-radius:50%; border:2px solid var(--acc); color:var(--acc); display:flex; align-items:center; justify-content:center; font-family:'Architects Daughter', cursive; font-size:15px; flex-shrink:0; }
+  .panel-head h3{ font-family:'Architects Daughter', cursive; font-size:16px; margin:0; text-decoration:underline; text-decoration-color:var(--acc); }
+  .panel ul.notes, .panel ol.notes{ margin:0; padding-left:18px; font-size:13.5px; line-height:1.55; }
+  .panel ul.notes li, .panel ol.notes li{ margin-bottom:3px; }
+
+  .minitable{ width:100%; border-collapse:collapse; font-size:13.5px; margin:6px 0; }
+  .minitable th{ background:var(--ink); color:#fff; padding:5px 9px; text-align:left; font-weight:700; }
+  .minitable td{ padding:5px 9px; border-bottom:1px solid #e3e3e3; text-align:left; }
+  .minitable td.rowhead{ font-weight:700; color:var(--acc); text-align:left; background:var(--acc-lt); }
+
+  .ipotable{ width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0; }
+  .ipotable th{ background:var(--ink); color:#fff; padding:7px 10px; text-align:left; width:110px; vertical-align:top; }
+  .ipotable td{ padding:7px 10px; border-bottom:1px solid #e3e3e3; text-align:left; }
+
+  .linktable{ width:100%; border-collapse:collapse; font-size:13px; margin:10px 0; }
+  .linktable th{ background:var(--ink); color:#fff; padding:5px 9px; text-align:left; font-weight:700; }
+  .linktable td{ padding:5px 9px; border-bottom:1px solid #e3e3e3; }
+
+  .tracetable{ width:100%; border-collapse:collapse; font-size:12.5px; margin:10px 0; }
+  .tracetable th{ background:var(--ink); color:#fff; padding:5px 8px; text-align:left; font-weight:700; }
+  .tracetable td{ padding:5px 8px; border-bottom:1px solid #e3e3e3; text-align:left; vertical-align:top; }
+  .tracetable td.step{ font-weight:700; color:var(--acc); width:26px; }
+
+  .qa-card{ border:1.5px solid var(--card-border); border-radius:12px; background:#fff; padding:12px 14px; margin-bottom:12px; }
+  .qa-card .q{ font-weight:700; font-size:14px; margin-bottom:6px; }
+  .qa-card .a{ font-size:13.5px; background:var(--acc-lt); border-radius:8px; padding:7px 10px; color:var(--ink); }
+  .qa-card .a b{ color:var(--acc); }
+
+  .bottom-row{ display:flex; gap:20px; margin-top:6px; }
+  .what-box{ border:2.5px solid var(--green); border-radius:14px; background:#fff; padding:14px 18px; flex:1; }
+  .what-box h2{ font-family:'Architects Daughter', cursive; font-size:18px; margin:0 0 8px 0; color:var(--green); text-decoration:underline; }
+  .what-box ol, .what-box ul{ margin:0; padding-left:20px; font-size:14px; line-height:1.6; }
+  .takeaway-box{ border:2.5px solid var(--purple); border-radius:14px; background:#fff; padding:14px 18px; flex:1; }
+  .takeaway-box h2{ font-family:'Architects Daughter', cursive; font-size:18px; margin:0 0 8px 0; color:var(--purple); text-decoration:underline; }
+  .takeaway-box ul{ margin:0; padding-left:20px; font-size:14px; line-height:1.6; }
+
+
+  /* ---------- hand-trace array markers ---------- */
+  .trace-array-panel{ margin:0 0 12px 0; }
+  .trace-array-box{ display:flex; flex-direction:column; align-items:center; padding:8px 0 4px; }
+  .trace-array{ position:relative; display:flex; align-items:stretch; margin-left:0; }
+  .trace-cell{ width:56px; height:48px; border:2px solid var(--pill-border); display:flex; align-items:center; justify-content:center; font-size:18px; background:#fff; }
+  .trace-cell + .trace-cell{ margin-left:-2px; }
+  .trace-cell.pivot-cell{ background:var(--acc-lt); border-color:var(--acc); border-width:3px; }
+  .trace-marker{ position:absolute; font-family:Kalam,cursive; font-weight:700; font-size:14px; white-space:nowrap; line-height:1; }
+  .trace-marker.j{ top:-29px; left:18px; color:var(--blue); }
+  .trace-marker.pivot{ top:-29px; right:-3px; color:#7E57C2; }
+  .trace-marker.i{ left:-78px; top:16px; color:var(--blue); }
+  .trace-marker.j::after,.trace-marker.pivot::after{ content:'↓'; display:block; text-align:center; font-size:16px; margin-top:2px; }
+  .trace-marker.i::after{ content:'→'; margin-left:4px; font-size:16px; }
+  .trace-index{ display:flex; margin-top:4px; }
+  .trace-index span{ width:56px; text-align:center; font-size:11px; color:var(--grey); }
+  .trace-start-note{ text-align:center; font-size:13px; margin-top:5px; color:var(--grey); }
+
+  /* ---------- array visualization ---------- */
+  .sort-wrap{ display:flex; flex-direction:column; align-items:center; margin:16px 0; }
+  .sort-row{ display:flex; }
+  .sort-cell{ width:68px; height:68px; border:2px solid var(--pill-border); display:flex; align-items:center; justify-content:center;
+    font-family:'Consolas','Courier New',monospace; font-weight:700; font-size:20px; background:var(--pill); margin-left:-2px; color:var(--ink); }
+  .sort-cell:first-child{ margin-left:0; }
+  .sort-cell.compare{ background:var(--new-lt); border-color:var(--new); border-width:3px; }
+  .sort-cell.nswap{ background:var(--acc-lt); border-color:var(--acc); border-width:3px; }
+  .sort-cell.sorted{ background:var(--green-lt); border-color:var(--green); color:var(--green); }
+  .idx-row2{ display:flex; margin-top:4px; }
+  .idx-cell2{ width:68px; margin-left:-2px; text-align:center; font-size:11px; color:var(--grey); }
+  .idx-cell2:first-child{ margin-left:0; }
+  .swap-arrow{ text-align:center; font-size:22px; color:var(--new); margin-top:2px; height:22px; }
+
+  .ctr-row{ display:flex; gap:14px; margin:14px 0; justify-content:center; }
+  .ctr-box{ border:2.5px dashed var(--purple); border-radius:10px; padding:8px 16px; font-family:'Consolas','Courier New',monospace; font-weight:700; color:var(--purple); background:var(--purple-lt); font-size:14px; }
+  .ctr-box .clab{ font-family:'Kalam', cursive; font-weight:400; font-size:11px; color:var(--grey); display:block; margin-bottom:2px; }
+  .ctr-box.flash{ outline:3px solid var(--new); border-color:var(--new); background:var(--new-lt); color:var(--ink); }
+
+  .legend{ display:flex; gap:18px; justify-content:center; margin:6px 0 0 0; font-size:12px; color:var(--grey); }
+  .legend .sw{ display:inline-block; width:14px; height:14px; border-radius:3px; margin-right:5px; vertical-align:-2px; border:2px solid; }
+  .legend .sw.c{ background:var(--new-lt); border-color:var(--new); }
+  .legend .sw.n{ background:var(--acc-lt); border-color:var(--acc); }
+  .legend .sw.s{ background:var(--green-lt); border-color:var(--green); }
+
+  .draft-banner{ background:var(--new-lt); border:1.5px dashed var(--new); border-radius:10px; padding:8px 14px; font-size:12.5px; color:var(--ink); margin-bottom:14px; }
+
+  pre.code{ background:var(--shaded); border:1.5px solid var(--card-border); border-radius:10px; padding:12px 16px; font-family:'Consolas','Courier New',monospace; font-size:13px; line-height:1.55; margin:0 0 12px 0; text-align:left; overflow-x:auto; }
+  pre.code .cm{ color:#2E7D32; }
+  pre.code .newl{ background:#FFF1B8; display:inline-block; width:100%; }
+  pre.code .hl{ background:#FFE08A; display:inline-block; width:100%; box-shadow:inset 4px 0 0 var(--new); }
+  pre.code .err{ text-decoration:underline wavy #D32F2F; }
+  .twocol{ display:grid; grid-template-columns:1.25fr 1fr; gap:16px; align-items:start; }
+  .vs-box{ border:2px solid #7fb3e0; border-radius:12px; background:#fff; padding:10px 14px; font-size:13.5px; margin-bottom:10px; }
+  .vs-box h4{ margin:0 0 4px 0; font-family:'Architects Daughter', cursive; font-size:15px; color:var(--acc); }
+  .vs-box.bad{ border-color:#D32F2F; } .vs-box.bad h4{ color:#D32F2F; }
+  .vs-box.good{ border-color:var(--green); } .vs-box.good h4{ color:var(--green); }
+  .console{ background:#0C1B2E; color:#E8F1FB; border-radius:10px; padding:10px 14px; font-family:'Consolas','Courier New',monospace; font-size:12.5px; line-height:1.5; white-space:pre; overflow-x:auto; margin-bottom:10px; text-align:left; }
+  .vartable{ width:100%; border-collapse:collapse; font-size:13.5px; margin:0 0 10px 0; }
+  .vartable th{ background:var(--ink); color:#fff; padding:5px 9px; text-align:left; }
+  .vartable td{ padding:5px 9px; border-bottom:1px solid #e3e3e3; font-family:'Consolas','Courier New',monospace; }
+  .vartable td.vn{ font-family:'Kalam',cursive; font-weight:700; color:var(--acc); background:var(--acc-lt); }
+  .vartable tr.chg td.val{ background:var(--new-lt); font-weight:700; }
+  .sort-cell.sm{ width:56px; height:56px; font-size:18px; }
+  .ptr-row{ display:flex; margin-top:2px; } .ptr-cell{ width:68px; margin-left:-2px; text-align:center; font-family:'Consolas','Courier New',monospace; font-weight:700; font-size:12px; color:var(--purple); min-height:16px; } .ptr-cell:first-child{ margin-left:0; }
+
+  .twocol.eq{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; }
+  pre.code{ white-space:pre; overflow-x:auto; }
+  .twocol{ grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); }
+  .panel-head h3{ overflow-wrap:normal; word-break:normal; }
+  pre.code{ max-width:100%; }
+  @media (max-width:1150px){
+    .rail{ width:200px; }
+    .stage{ padding:20px 22px 90px 22px; }
+    .twocol, .twocol.eq{ grid-template-columns:minmax(0,1fr); }
+    .grid{ grid-template-columns:minmax(0,1fr); }
+    pre.code{ font-size:12.5px; }
+  }
+  @media (max-width:800px){
+    .rail{ width:150px; }
+    .rail-item{ font-size:12px; }
+  }
+ .sort-cell.zone{ background:#EDE7F6; border-color:#7E57C2; }
+ .sw.z{ background:#EDE7F6; border:2px solid #7E57C2; }
+ .sw.pv{ background:#DDEBF7; border:2px solid #2E75B6; }
+
+  .calltree{ background:#fff; border:2px solid #7fb3e0; border-radius:14px; padding:14px 18px; font-family:'Consolas','Courier New',monospace; font-size:13px; line-height:1.55; white-space:pre-wrap; }
+  .calltree .final{ color:var(--green); font-weight:700; }
+  .calltree .base{ color:var(--purple); font-weight:700; }
+  .definition-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:10px 0; }
+  .definition{ border:2px solid #7fb3e0; border-radius:12px; background:#fff; padding:10px 12px; }
+  .definition h4{ margin:0 0 4px 0; font-family:'Architects Daughter',cursive; color:var(--acc); font-size:16px; }
+  .definition p{ margin:0; font-size:13px; line-height:1.45; }
+  .formula-box{ border:2px solid var(--purple); border-radius:12px; background:var(--purple-lt); padding:10px 14px; margin:10px 0; font-family:'Consolas','Courier New',monospace; font-size:14px; text-align:center; }
+  .arrow-note{ text-align:center; font-size:15px; font-weight:700; color:var(--acc); margin:4px 0; }
+
+
+  .var-row{ display:flex; margin-top:2px; min-height:18px; }
+  .var-cell{ width:68px; margin-left:-2px; text-align:center; font-family:'Consolas','Courier New',monospace; font-weight:700; font-size:11px; line-height:1.05; color:var(--purple); }
+  .var-cell:first-child{ margin-left:0; }
+  .var-cell.key{ color:var(--new); }
+  .var-note{ font-family:'Kalam',cursive; font-size:11px; color:var(--grey); text-align:center; margin-top:2px; }
+
+ .split{ display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:16px; align-items:start; }
+ .split-main{ min-width:0; } .split-side{ min-width:0; }
+ .twocol.three{ grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.95fr); gap:14px; }
+ .twocol.three .sort-cell, .split-side .sort-cell{ }
+ .twocol.three .sort-cell.sm,.twocol.three .sort-cell{ width:46px; height:50px; font-size:17px; }
+ .twocol.three .idx-cell2,.twocol.three .var-cell{ width:46px !important; }
+ .twocol.three .var-cell{ font-size:10px; }
+ .twocol.three pre.code{ font-size:12px; padding:10px 12px; white-space:pre-wrap; word-break:break-word; }
+ .twocol.three .formula-box{ font-size:12.5px; }
+ .sort-cell.pvl{ margin-right:8px; } .sort-cell.pvr{ margin-left:8px; }
+ .twocol.three .calltree{ font-size:11.5px; padding:10px 12px; white-space:pre; overflow-x:auto; }
+ .twocol.eq pre.code{ font-size:10.5px !important; line-height:1.3 !important; }
+ .sort-cell.xs{ width:34px; height:34px; font-size:12px; }
+ .sort-cell.single{ background:#EDEDED; }
+ .sw.single{ background:#EDEDED; border:2px solid var(--pill-border); }
+ .lvl{ margin:8px 0 4px; } .lvl-head{ font-size:13px; margin-bottom:3px; } .lvl-sub{ color:var(--grey); }
+ .halve{ display:flex; gap:10px; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:var(--acc); margin:4px 0 10px; font-family:'Consolas',monospace; }
+ .halve span{ padding:2px 8px; }
+ @media (max-width:1150px){ .split,.twocol.three{ grid-template-columns:minmax(0,1fr); } }
+ @media (max-height:640px){
+   .twocol.three pre.code{ font-size:11px; line-height:1.3; }
+   .panel ul.notes{ font-size:12px; line-height:1.3; }
+   .slide-title{ font-size:22px; }
+   .sort-cell{ width:48px; height:46px; font-size:16px; }
+   .idx-cell2,.var-cell{ width:48px !important; }
+   .sort-cell.xs{ width:34px; height:30px; }
+   .twocol.eq pre.code{ font-size:9.5px !important; }
+   .lvl{ margin:4px 0 2px; }
+ }
+ @media (max-height:760px){
+   .stage{ padding-top:14px; }
+   .slide-sub{ margin-bottom:8px; }
+   .panel{ padding:8px 12px; }
+   .panel ul.notes{ line-height:1.4; font-size:13px; }
+   pre.code{ line-height:1.4; padding:8px 12px; margin-bottom:8px; }
+   .sort-cell{ width:56px; height:56px; font-size:18px; }
+   .idx-cell2,.var-cell{ width:56px; }
+ }
+
+  /* fit-to-screen: two columns that flow to the right instead of stacking and being cut off */
+  .stage{ padding:18px 30px 76px 30px; }
+  .fit{ display:grid; gap:12px; align-items:start; }
+  .fit.c2{ grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); }
+  .fit.c3{ grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,.9fr); gap:10px; }
+  .fit>div{ min-width:0; display:flex; flex-direction:column; gap:10px; }
+  .fit .panel{ padding:8px 12px 10px 12px; margin:0; }
+  .fit .panel-head{ margin-bottom:5px; }
+  .fit .panel ul.notes,.fit .panel ol.notes{ font-size:13px; line-height:1.42; }
+  .fit .panel ul.notes li,.fit .panel ol.notes li{ margin-bottom:1px; }
+  .fit .formula-box{ margin:5px 0 0 0; padding:5px 10px; font-size:13.5px; }
+  .fit .tracetable{ margin:4px 0; font-size:12px; }
+  .fit .tracetable th,.fit .tracetable td{ padding:3px 6px; }
+  .fit pre.code{ font-size:12px; line-height:1.4; padding:8px 12px; margin:0; }
+  .fit .arrow-note{ margin:0; font-size:13px; }
+  .fit .what-box,.fit .takeaway-box{ padding:8px 14px; margin:0; }
+  .fit .what-box h2,.fit .takeaway-box h2{ font-size:16px; margin:0 0 4px 0; }
+  .fit .what-box ol,.fit .what-box ul,.fit .takeaway-box ul{ font-size:13px; line-height:1.42; }
+  .fit .vs-box{ margin:0; padding:8px 12px; }
+  .fit .trace-array-panel{ margin:0; }
+  .fit .trace-array-box{ padding:4px 0 2px; }
+  .fit .trace-start-note{ font-size:12.5px; }
+
+  .fit{ gap:10px; }
+  .fit>div{ gap:8px; }
+  .fit .panel{ padding:6px 11px 8px 11px; }
+  .fit .panel-head h3{ font-size:15px; }
+  .fit .num{ width:22px; height:22px; font-size:13px; }
+  .fit .panel ul.notes,.fit .panel ol.notes{ font-size:12.5px; line-height:1.35; }
+  .fit .what-box,.fit .takeaway-box{ padding:6px 12px 8px 12px; }
+  .fit .what-box ol,.fit .what-box ul,.fit .takeaway-box ul{ font-size:12.5px; line-height:1.35; }
+  .fit .what-box h2,.fit .takeaway-box h2{ font-size:15px; margin:0 0 3px 0; }
+  .fit .formula-box{ padding:3px 8px; font-size:13px; margin:4px 0 0 0; }
+  .stage{ padding-bottom:70px; }
+  .fit .vs-box h4{ font-size:14px; margin:0 0 3px 0; }
+  .fit .vs-box{ font-size:12.5px; line-height:1.4; }
+  .slide.tight .sort-wrap{ margin:7px 0; }
+  .num.pill{ width:auto; height:auto; border-radius:12px; padding:1px 9px; font-size:12px; white-space:nowrap; }
+  .fit .trace-array-box{ padding:30px 0 2px; }
+</style>
+<style>.rv:not(.on){display:none!important}.trace .rv.latest{border-left-color:#1b6fd1!important;background:rgba(27,111,209,.08);border-radius:6px}.grid.rv.on{display:grid!important}</style></head>
+<body>
+<header class="topbar">
+<h1>Board 3 — Quick Sort: From Hand Trace to Recursion Tree</h1>
+<p>Understand the idea → trace by hand → derive pseudocode → trace the recursive tree → write the code</p>
+</header>
+<div class="app-shell">
+<nav class="rail"><div class="rail-item" data-step="0"><span class="n">0</span>What Is Quick Sort?</div>
+<div class="rail-item" data-step="1"><span class="n">1</span>How to Trace by Hand</div>
+<div class="rail-item" data-step="2"><span class="n">2</span>Finish the Hand Trace</div>
+<div class="rail-item" data-step="3"><span class="n">3</span>From Hand Trace to Pseudocode</div>
+<div class="rail-item" data-step="4"><span class="n">4</span>Pseudocode → Recursion Tree</div>
+<div class="rail-item" data-step="5"><span class="n">5</span>Recursion Tree: Trace the Example</div>
+<div class="rail-item" data-step="6"><span class="n">6</span>Write It: Main</div>
+<div class="rail-item" data-step="7"><span class="n">7</span>Write It: Recursive QuickSort</div>
+<div class="rail-item" data-step="8"><span class="n">8</span>Write It: Partition Setup</div>
+<div class="rail-item" data-step="9"><span class="n">9</span>Write It: Partition Sweep</div>
+<div class="rail-item" data-step="10"><span class="n">10</span>Write It: Swap</div>
+<div class="rail-item" data-step="11"><span class="n">11</span>The Whole Program</div>
+<div class="rail-item" data-step="12"><span class="n">12</span>Worst Case</div>
+<div class="rail-item" data-step="13"><span class="n">13</span>Best Case</div>
+<div class="rail-item" data-step="14"><span class="n">14</span>Choosing the Pivot</div>
+<div class="rail-item" data-step="15"><span class="n">15</span>Quick Sort Compared</div>
+<div class="rail-item" data-step="16"><span class="n">16</span>Check Yourself</div>
+</nav>
+<main class="stage">
+
+<section class="slide">
+<h2 class="slide-title">0 — What Is Quick Sort?</h2>
+<p class="slide-sub">Start with the idea before looking at the code.</p>
+<div class="split">
+  <div class="split-main">
+    <div class="panel">
+      <div class="panel-head"><div class="num">1</div><h3>One pivot, two parts</h3></div>
+      <ul class="notes">
+        <li>Choose one value as the <b>pivot</b>.</li>
+        <li>Partition the current range so values <b>smaller</b> than the pivot are on its left and values <b>larger</b> are on its right.</li>
+        <li>The pivot is now in its <b>final position</b>.</li>
+        <li>Repeat the same process on the left part and the right part.</li>
+      </ul>
+    </div>
+    <div class="panel" style="margin-top:12px;">
+      <div class="panel-head"><div class="num">2</div><h3>Our example</h3></div>
+      <div class="sort-wrap">
+        <div class="sort-row">
+          <div class="sort-cell sm">5</div><div class="sort-cell sm">1</div><div class="sort-cell sm">4</div>
+          <div class="sort-cell sm">2</div><div class="sort-cell sm">8</div><div class="sort-cell sm nswap">3</div>
+        </div>
+        <div class="idx-row2">
+          <div class="idx-cell2" style="width:56px">0</div><div class="idx-cell2" style="width:56px">1</div>
+          <div class="idx-cell2" style="width:56px">2</div><div class="idx-cell2" style="width:56px">3</div>
+          <div class="idx-cell2" style="width:56px">4</div><div class="idx-cell2" style="width:56px">5</div>
+        </div>
+      </div>
+      <div class="arrow-note">For today's version, the <b>last value is the pivot</b>.</div>
+      <div class="formula-box">[5, 1, 4, 2, 8, <b>3</b>] → partition around <b>3</b> → [1, 2] | <b>3</b> | [5, 8, 4]</div>
+    </div>
+  </div>
+  <div class="split-side">
+    <div class="panel">
+      <div class="panel-head"><div class="num">3</div><h3>What Quick Sort guarantees after one partition</h3></div>
+      <ul class="notes">
+        <li>The pivot is in the position it will have in the final sorted array.</li>
+        <li>Everything left of it is smaller; everything right of it is larger.</li>
+        <li>We do <b>not</b> claim that either side is sorted yet.</li>
+        <li>That is the key idea we will trace by hand first.</li>
+      </ul>
+    </div>
+    <div class="vs-box good" style="margin-top:12px;">
+      <h4>The mental model</h4>
+      <b>Partition one range → fix one pivot → recursively sort the two remaining ranges.</b>
+    </div>
+  </div>
+</div>
+</section>
+
+
+<section class="slide">
+<h2 class="slide-title">1 — How to Trace Quick Sort by Hand</h2>
+<p class="slide-sub">Before writing pseudocode, trace one partition using only four questions.</p>
+<div class="fit c2">
+<div>
+<div class="panel trace-array-panel">
+  <div class="panel-head"><div class="num">0</div><h3>Before we trace: start with the array</h3></div>
+  <div class="formula-box" style="margin-bottom:8px; text-align:center;">Our example: <b>[5, 1, 4, 2, 8, 3]</b></div>
+  <div class="trace-array-box">
+    <div class="trace-array">
+      <div class="trace-marker i">i = −1</div>
+      <div class="trace-marker j">j = 0</div>
+      <div class="trace-marker pivot">pivot = 3</div>
+      <div class="trace-cell">5</div><div class="trace-cell">1</div><div class="trace-cell">4</div>
+      <div class="trace-cell">2</div><div class="trace-cell">8</div><div class="trace-cell pivot-cell">3</div>
+    </div>
+    <div class="trace-index"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+  </div>
+  <div class="trace-start-note"><b>We have not moved anything yet.</b> We are simply marking where <b>i</b>, <b>j</b>, and the <b>pivot</b> begin.</div>
+</div>
+<div class="panel">
+  <div class="panel-head"><div class="num">3</div><h3>Trace our example</h3></div>
+  <table class="tracetable">
+    <tr><th>j</th><th>Value checked</th><th>Compare with 3</th><th>What happens</th><th>Array after the step</th></tr>
+    <tr><td class="step">0</td><td>5</td><td>5 &lt; 3? <b>NO</b></td><td>i stays −1; no swap</td><td>[5, 1, 4, 2, 8, 3]</td></tr>
+    <tr><td class="step">1</td><td>1</td><td>1 &lt; 3? <b>YES</b></td><td>i → 0; swap 0,1</td><td>[1, 5, 4, 2, 8, 3]</td></tr>
+    <tr><td class="step">2</td><td>4</td><td>4 &lt; 3? <b>NO</b></td><td>i stays 0; no swap</td><td>[1, 5, 4, 2, 8, 3]</td></tr>
+    <tr><td class="step">3</td><td>2</td><td>2 &lt; 3? <b>YES</b></td><td>i → 1; swap 1,3</td><td>[1, 2, 4, 5, 8, 3]</td></tr>
+    <tr><td class="step">4</td><td>8</td><td>8 &lt; 3? <b>NO</b></td><td>i stays 1; no swap</td><td>[1, 2, 4, 5, 8, 3]</td></tr>
+  </table>
+  <div class="formula-box"><b>After the scan:</b> i = 1 → the smaller zone is positions 0..1 → pivot belongs at <b>i + 1 = 2</b>.</div>
+</div>
+
+</div>
+<div>
+  <div class="panel">
+    <div class="panel-head"><div class="num">1</div><h3>Mark the range</h3></div>
+    <ul class="notes">
+      <li>Current range: <b>low = 0</b> to <b>high = 5</b>.</li>
+      <li>Pivot = <b>a[high] = 3</b>.</li>
+      <li>Set <b>i = low − 1 = −1</b>.</li>
+      <li><b>j</b> scans from 0 through 4.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div class="num">2</div><h3>Ask one question at j</h3></div>
+    <div class="formula-box">Is <b>a[j] &lt; pivot</b>?</div>
+    <ul class="notes">
+      <li><b>NO:</b> leave the value where it is; move on.</li>
+      <li><b>YES:</b> move the smaller-zone boundary <b>i</b> one step right, then swap.</li>
+    </ul>
+  </div>
+<div class="what-box">
+    <h2>Hand-trace rule</h2>
+    <ol>
+      <li>Mark <b>low</b>, <b>high</b>, <b>pivot</b>, and <b>i</b>.</li>
+      <li>Move <b>j</b> one position at a time.</li>
+      <li>Only when <code>a[j] &lt; pivot</code> do we increase <code>i</code> and swap.</li>
+      <li>When j finishes, swap the pivot into <b>i + 1</b>.</li>
+    </ol>
+  </div>
+<div class="takeaway-box">
+    <h2>What we have discovered</h2>
+    <ul>
+      <li>Partition does one scan.</li>
+      <li><b>i</b> is not a second scanner; it marks the end of the smaller zone.</li>
+      <li>The pivot's final position comes from <b>i + 1</b>.</li>
+    </ul>
+  </div>
+</div>
+</div>
+</section>
+
+
+<section class="slide">
+<h2 class="slide-title">2 — Finish the Hand Trace</h2>
+<p class="slide-sub">Once the first pivot is fixed, repeat the same rule only on the remaining ranges.</p>
+<div class="fit c2">
+<div>
+<div class="panel">
+  <div class="panel-head"><div class="num">1</div><h3>First partition gives us three positions</h3></div>
+  <div class="sort-wrap">
+    <div class="sort-row">
+      <div class="sort-cell sm">1</div><div class="sort-cell sm">2</div><div class="sort-cell sm sorted">3</div>
+      <div class="sort-cell sm">5</div><div class="sort-cell sm">8</div><div class="sort-cell sm">4</div>
+    </div>
+    <div class="idx-row2"><div class="idx-cell2" style="width:56px">0</div><div class="idx-cell2" style="width:56px">1</div><div class="idx-cell2" style="width:56px">2</div><div class="idx-cell2" style="width:56px">3</div><div class="idx-cell2" style="width:56px">4</div><div class="idx-cell2" style="width:56px">5</div></div>
+  </div>
+  <div class="formula-box">[1, 2] &nbsp; | &nbsp; <b>3</b> &nbsp; | &nbsp; [5, 8, 4]</div>
+</div>
+
+<div class="panel">
+  <div class="panel-head"><div class="num">2</div><h3>Continue exactly the same hand-trace</h3></div>
+  <table class="tracetable">
+    <tr><th>Current range</th><th>Pivot</th><th>Result of partition</th><th>New recursive ranges</th></tr>
+    <tr><td class="step">0..1</td><td>2</td><td>2 lands at index <b>1</b></td><td>0..0 and 2..1</td></tr>
+    <tr><td class="step">3..5</td><td>4</td><td>4 lands at index <b>3</b></td><td>3..2 and 4..5</td></tr>
+    <tr><td class="step">4..5</td><td>5</td><td>5 lands at index <b>4</b></td><td>4..3 and 5..5</td></tr>
+  </table>
+</div>
+
+</div>
+<div>
+    <div class="panel">
+      <div class="panel-head"><div class="num">3</div><h3>Where does the trace stop?</h3></div>
+      <ul class="notes">
+        <li><code>QuickSort(a, 0, 0)</code> → one value → stop.</li>
+        <li><code>QuickSort(a, 2, 1)</code> → empty range → stop.</li>
+        <li><code>QuickSort(a, 3, 2)</code> → empty range → stop.</li>
+        <li><code>QuickSort(a, 4, 3)</code> → empty range → stop.</li>
+        <li><code>QuickSort(a, 5, 5)</code> → one value → stop.</li>
+      </ul>
+    </div>
+    <div class="vs-box good">
+      <h4>The hand trace has now given us the algorithm</h4>
+      <div style="font-size:15px;line-height:1.55;">
+        <b>Partition a range</b><br>
+        ↓<br>
+        <b>Get pivot position p</b><br>
+        ↓<br>
+        <b>Sort 0..p−1</b> and <b>p+1..high</b><br>
+        ↓<br>
+        <b>Stop when the range has ≤ 1 value</b>
+      </div>
+    </div>
+</div>
+</div>
+</section>
+
+
+<section class="slide">
+<h2 class="slide-title">3 — From the Hand Trace to Pseudocode</h2>
+<p class="slide-sub">Do not memorize the code. Translate each action we just traced into one algorithm step.</p>
+<div class="fit c3">
+<div>
+    <div class="panel">
+      <div class="panel-head"><div class="num">1</div><h3>What did we do by hand?</h3></div>
+      <ol class="notes">
+        <li>Choose the last value as the pivot.</li>
+        <li>Set <code>i = low − 1</code>.</li>
+        <li>Let <code>j</code> scan from <code>low</code> to <code>high − 1</code>.</li>
+        <li>If <code>a[j] &lt; pivot</code>, increase <code>i</code> and swap <code>a[i]</code> with <code>a[j]</code>.</li>
+        <li>After the scan, swap the pivot with <code>a[i + 1]</code>.</li>
+        <li>Return <code>i + 1</code> as the pivot position.</li>
+      </ol>
+    </div>
+    <div class="arrow-note">That becomes our <b>Partition</b> pseudocode.</div>
+    <pre class="code">PARTITION(a, low, high)
+    pivot ← a[high]
+    i ← low − 1
+
+    FOR j ← low TO high − 1
+        IF a[j] &lt; pivot
+            i ← i + 1
+            SWAP(a[i], a[j])
+
+    SWAP(a[i + 1], a[high])
+    RETURN i + 1</pre>
+</div>
+<div>
+    <div class="panel">
+      <div class="panel-head"><div class="num">2</div><h3>What did we do after partition?</h3></div>
+      <ul class="notes">
+        <li>The first partition returned <b>p = 2</b>.</li>
+        <li>So we sorted <code>0..1</code> and <code>3..5</code>.</li>
+        <li>Each of those calls follows the <b>same rule</b>.</li>
+        <li>That is recursion: the method calls itself on smaller ranges.</li>
+      </ul>
+    </div>
+    <div class="arrow-note">Now translate that into recursive pseudocode.</div>
+    <pre class="code">QUICKSORT(a, low, high)
+    IF low &lt; high
+        p ← PARTITION(a, low, high)
+
+        QUICKSORT(a, low, p − 1)
+        QUICKSORT(a, p + 1, high)</pre>
+    <div class="formula-box"><b>Base case:</b> if <code>low ≥ high</code>, there is nothing to partition.</div>
+<div class="vs-box good">
+  <h4>Notice the order</h4>
+  <b>We did not invent the recursive code first.</b> The hand trace showed us the smaller ranges. The pseudocode simply records the pattern we discovered.
+</div>
+</div>
+<div>
+<div class="panel"><div class="panel-head"><div class="num pill">Heads up</div><h3>There are different ways to partition</h3></div><ul class="notes"><li><b>Today we are using the Lomuto partition scheme:</b> the pivot starts at the end, <code>j</code> scans the range, and <code>i</code> marks the boundary of the smaller values.</li><li><b>Hoare partition:</b> instead of one forward scan, two pointers start near the two ends and move inward. They look for values on the wrong side and swap them. Hoare returns a <b>split boundary</b>; that boundary is not necessarily the pivot's final position.</li><li>So do not memorize one partition routine as “the” Quick Sort. <b>Quick Sort is the overall algorithm; Lomuto and Hoare are partition schemes.</b> The recursive idea is still: partition the range, then sort the two resulting parts.</li></ul><div class="formula-box" style="margin-top:8px;"><b>Think of it this way:</b> Lomuto = one boundary + one scan. Hoare = two pointers moving inward. Both are ways to do the partition step.</div></div></div>
+</div>
+</section>
+
+
+<section class="slide">
+<h2 class="slide-title">4 — The Pseudocode Becomes a Recursion Tree</h2>
+<p class="slide-sub">Now trace the calls, not the individual j comparisons. The partition work is already understood.</p>
+<div class="split">
+  <div class="split-main">
+    <pre class="code">QUICKSORT(a, low, high)
+    IF low &lt; high
+        p ← PARTITION(a, low, high)
+
+        QUICKSORT(a, low, p − 1)
+        QUICKSORT(a, p + 1, high)</pre>
+    <div class="formula-box">
+      For our first call: <b>QuickSort(a, 0, 5)</b><br>
+      Partition → <b>p = 2</b><br>
+      Left call → <b>QuickSort(a, 0, 1)</b><br>
+      Right call → <b>QuickSort(a, 3, 5)</b>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="num">1</div><h3>What to watch in the tree</h3></div>
+      <ul class="notes">
+        <li>Every box is one call to <code>QuickSort</code>.</li>
+        <li>A call first partitions its current range.</li>
+        <li>Then it makes the <b>left</b> call.</li>
+        <li>When the left call returns, it makes the <b>right</b> call.</li>
+        <li>Base cases are where the recursion stops.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="split-side">
+    <div class="vs-box good">
+      <h4>Now trace the actual example</h4>
+      <div style="font-size:14px;line-height:1.5;">
+        We will keep the exact array<br>
+        <b>[5, 1, 4, 2, 8, 3]</b><br><br>
+        and follow the recursive calls in execution order.
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div class="num">2</div><h3>One important shift</h3></div>
+      <ul class="notes">
+        <li>Earlier, we traced <b>inside Partition</b>: <code>i</code>, <code>j</code>, swaps.</li>
+        <li>Now we trace <b>recursion</b>: <code>low</code>, <code>high</code>, <code>p</code>, calls, returns.</li>
+        <li>The interactive tree on the next board does both: it shows the call tree and the array as each call changes it.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<section class="slide wide">
+<h2 class="slide-title">5 — The Calls, in Order: The Recursion Tree</h2>
+<p class="slide-sub">Next and Back step through every call: down into the tree, and back up as each call returns</p>
+<iframe data-trace="1" title="Recursion tree trace" style="width:100%;height:calc(100vh - 252px);min-height:400px;border:0;" srcdoc="<!doctype html>
+<html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;>
+<title>Quick Sort: Recursion Tree Trace</title>
+<link href=&quot;https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&amp;display=swap&quot; rel=&quot;stylesheet&quot;>
+<style>
+:root{--blue:#1b6fd1;--violet:#6a3fc0;--pink:#c2185b;--green:#2e8b4f;--orange:#d9822b}
+*{box-sizing:border-box}
+body{margin:0;background:#fdfcf8;font-family:Kalam,cursive;color:#222;display:flex;flex-direction:column;height:100vh}
+header{text-align:center;padding:8px 10px 2px;border-bottom:3px solid var(--blue)}
+h1{margin:0;font-size:24px}header p{margin:2px 0 6px;font-size:15px}
+main{flex:1;display:flex;gap:14px;padding:8px 14px;min-height:0;flex-wrap:wrap;overflow:auto}
+#treeBox{flex:1 1 520px;min-width:400px}
+#side{flex:0 1 400px;min-width:330px;display:flex;flex-direction:column;gap:8px}
+.card{border:2px solid #9bb8d6;border-radius:12px;background:rgba(255,255,255,.7);padding:8px 12px}
+.tag{display:inline-block;font-weight:700;font-size:14px;color:#fff;border-radius:8px;padding:0 10px;margin-bottom:4px}
+#text{font-size:16px;line-height:1.4;min-height:66px}
+code,.mono{font-family:Consolas,monospace}
+#arr{display:flex;gap:3px;justify-content:center;margin:4px 0}
+.cell{width:46px;text-align:center}
+.cell .v{height:40px;line-height:36px;border:2px solid #bbb;background:#eee;font:700 20px Consolas,monospace;opacity:.55}
+.cell.in .v{background:#fff;border:3px solid var(--blue);opacity:1}
+.cell.fin .v{background:#7cc48f;border-color:var(--green);opacity:1}
+.cell.piv .v{background:#ffd9b0}
+.cell.sw .v{background:#fff0a8}
+.cell.jj .v{box-shadow:0 0 0 3px #1b6fd1}
+.cell .ix{font:11.5px Consolas,monospace;color:#667}
+.cell .mk{height:30px;font:700 12px Consolas,monospace;line-height:14px;color:#222}
+#vars{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:center;font:13px Consolas,monospace;margin-bottom:2px}#vars b{background:#eef4fb;border:1px solid #9bb8d6;border-radius:6px;padding:0 6px}#vars span.k{color:#555}
+#log{font:13px Consolas,monospace;line-height:1.5;min-height:20px}
+#stack div{font:13px Consolas,monospace;padding:2px 8px;margin:2px 0;border-left:5px solid var(--blue);background:#eef4fb}
+#stack div.top{background:#cfe3fa;font-weight:700}
+#stack small{font-family:Kalam,cursive;color:#444}
+footer{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-top:3px solid var(--blue);background:#fff}
+button{font:700 18px Kalam,cursive;border-radius:24px;padding:6px 26px;cursor:pointer;border:2px solid var(--blue);background:#fff;color:var(--blue)}
+button.n{background:var(--blue);color:#fff}button:disabled{opacity:.4;cursor:default}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;margin:2px 0 0}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;border:2px solid;vertical-align:-2px;margin-right:4px}
+body.emb header,body.emb footer{display:none}body.emb{height:100vh}body.emb main{padding:4px 6px}body.emb #treeBox{flex:1 1 500px;min-width:480px}body.emb #side{flex:0 1 430px;min-width:380px}
+.tree-tools{display:flex;justify-content:flex-end;margin:0 0 4px}.tree-tools button{font:700 15px Kalam,cursive;border-radius:18px;padding:4px 14px;cursor:pointer;border:2px solid var(--blue);background:#fff;color:var(--blue)}.tree-tools button:hover{background:#eaf1f8}
+</style></head><body>
+<header><h1>Quick Sort: The Recursion Tree, Traced</h1><p>[5, 1, 4, 2, 8, 3], pivot = last value of each range. Click Next to go forward, Back to go backward.</p></header>
+<main>
+ <div id=&quot;treeBox&quot;><div class=&quot;tree-tools&quot;><button id=&quot;showAll&quot; type=&quot;button&quot;>Show All →</button></div><svg id=&quot;tree&quot; viewBox=&quot;-5 0 860 440&quot; width=&quot;100%&quot;></svg>
+  <div class=&quot;legend&quot;><span><i style=&quot;background:#e3eef9;border-color:#1b6fd1&quot;></i>Partitions</span><span><i style=&quot;background:#e9defa;border-color:#6a3fc0&quot;></i>Base: one value</span><span><i style=&quot;background:#fbdde8;border-color:#c2185b&quot;></i>Base: empty range</span><span><i style=&quot;background:#f4f4f4;border-color:#bbb;border-style:dashed&quot;></i>Not called yet</span><span><i style=&quot;background:#fff;border-color:#2e8b4f&quot;></i>&amp;#10003; Finished</span></div></div>
+ <div id=&quot;side&quot;>
+  <div class=&quot;card&quot;><span class=&quot;tag&quot; id=&quot;tag&quot;></span><div id=&quot;text&quot;></div></div>
+  <div class=&quot;card&quot;><div id=&quot;vars&quot;></div><div id=&quot;arr&quot;></div><div id=&quot;log&quot;></div>
+   <div class=&quot;legend&quot;><span><i style=&quot;background:#fff;border-color:#1b6fd1&quot;></i>In range</span><span><i style=&quot;background:#ffd9b0;border-color:#1b6fd1&quot;></i>Pivot</span><span><i style=&quot;background:#fff0a8;border-color:#bbb&quot;></i>Just swapped</span><span><i style=&quot;background:#7cc48f;border-color:#2e8b4f&quot;></i>Final</span></div></div>
+  <div class=&quot;card&quot;><b>Call stack</b> <small>(top = running now)</small><div id=&quot;stack&quot;></div></div>
+ </div>
+</main>
+<footer><button id=&quot;back&quot;>&amp;larr; Back</button><span id=&quot;ind&quot;></span><button id=&quot;next&quot; class=&quot;n&quot;>Next &amp;rarr;</button></footer>
+<script>
+const A0=[5,1,4,2,8,3];
+const POS={'0,5':[361,10],'0,1':[170,125],'3,5':[552,125],'0,0':[85,240],'2,1':[255,240],'3,2':[425,240],'4,5':[680,240],'4,3':[595,355],'5,5':[765,355]};
+const EDGES=[['0,5','0,1','left'],['0,5','3,5','right'],['0,1','0,0','left'],['0,1','2,1','right'],['3,5','3,2','left'],['3,5','4,5','right'],['4,5','4,3','left'],['4,5','5,5','right']];
+const ev=[];let arr=A0.slice(),fin=new Set(),ns={},info={},stack=[];
+for(const k in POS)ns[k]='idle';
+const nm=(lo,hi)=>`QuickSort(a, ${lo}, ${hi})`;
+function push(o){ev.push(Object.assign({arr:arr.slice(),fin:[...fin],ns:Object.assign({},ns),info:JSON.parse(JSON.stringify(info)),stack:JSON.parse(JSON.stringify(stack)),lo:null,hi:null,i:null,j:null,pv:null,p:null,sw:[],piv:null,log:[],tag:'',col:'#1b6fd1'},o))}
+function qs(lo,hi,parent,par){
+  const key=lo+','+hi;
+  stack.push({call:nm(lo,hi),st:'running'});ns[key]='active';
+  push({tag:'CALL ↓',col:'#1b6fd1',lo,hi,text:`<code>${nm(lo,hi)}</code> starts. Test: <code>low &amp;lt; high</code> → ${lo} &amp;lt; ${hi} → <b>${lo<hi}</b>.`+(lo<hi?' So we partition this range.':'')});
+  if(!(lo<hi)){
+    const one=lo==hi;info[key]={base:one?'one value':'empty range'};
+    if(one)fin.add(lo);
+    push({tag:'BASE CASE',col:one?'#6a3fc0':'#c2185b',lo,hi,text:one?`<b>BASE CASE: one value.</b> Position ${lo} is a single value, so it is already sorted. We do not partition. The call ends.`:`<b>BASE CASE: empty range.</b> low = ${lo} is after high = ${hi}, so there are no positions at all. We do not partition. The call ends.`});
+    ns[key]='done';stack.pop();
+    push({tag:'RETURN ↑',col:'#2e8b4f',lo:par?par.lo:null,hi:par?par.hi:null,pv:par?par.pv:null,p:par?par.p:null,text:`<code>${nm(lo,hi)}</code> ends and returns to ${parent?`<code>${parent}</code>`:'Main'}.`});
+    return;
+  }
+  const piv=arr[hi];let i=lo-1;const log=[];
+  push({tag:'PARTITION',col:'#d9822b',lo,hi,i,pv:piv,piv:hi,text:`<code>Partition(a, ${lo}, ${hi})</code>: pivot = a[${hi}] = <b>${piv}</b>. We set <code>i = low - 1 = ${i}</code>, so the smaller zone is empty. Then <code>j</code> scans from ${lo} to ${hi-1}.`,log:[]});
+  for(let j=lo;j<hi;j++){
+    const v=arr[j];let sw=[];
+    if(v<piv){i++;[arr[i],arr[j]]=[arr[j],arr[i]];if(i!=j)sw=[i,j];
+      log.push(`j=${j}: a[${j}]=${v} &amp;lt; ${piv}? YES → i++ = ${i}, Swap(a, i, j) = Swap(a, ${i}, ${j})${i==j?' (self-swap)':''}`);
+      push({tag:'PARTITION',col:'#d9822b',lo,hi,i,j,sw,pv:piv,piv:hi,text:`j = ${j}: a[${j}] = ${v}. Is ${v} &amp;lt; ${piv}? <b>YES</b>. First <code>i++</code> → i = ${i}. Then <code>Swap(a, i, j)</code> = <code>Swap(a, ${i}, ${j})</code>${i==j?'. Both positions are the same, so nothing changes.':'.'}`,log:log.slice()});
+    }else{
+      log.push(`j=${j}: a[${j}]=${v} &amp;lt; ${piv}? NO → i stays ${i}`);
+      push({tag:'PARTITION',col:'#d9822b',lo,hi,i,j,pv:piv,piv:hi,text:`j = ${j}: a[${j}] = ${v}. Is ${v} &amp;lt; ${piv}? <b>NO</b>. i stays ${i}. No swap.`,log:log.slice()});
+    }
+  }
+  const p=i+1;[arr[p],arr[hi]]=[arr[hi],arr[p]];fin.add(p);ns[key]='part';info[key]={p};
+  const sw=p!=hi?[p,hi]:[];
+  push({tag:'PIVOT LANDS',col:'#2e8b4f',lo,hi,i,sw,pv:piv,p,text:`The loop is done. <code>Swap(a, i + 1, high)</code> = <code>Swap(a, ${i} + 1, ${hi})</code> = <code>Swap(a, ${p}, ${hi})</code>${p==hi?'. The pivot is already there.':'.'} The pivot ${piv} is now at index <b>p = ${p}</b>. It is final.`,log:log.slice()});
+  stack[stack.length-1].st=`left call next`;
+  push({tag:'CALL ↓',col:'#1b6fd1',lo,hi,pv:piv,p,text:`Left part: <code>QuickSort(a, low, p - 1)</code> = <code>QuickSort(a, ${lo}, ${p} - 1)</code> = <code>${nm(lo,p-1)}</code>.`});
+  stack[stack.length-1].st=`waiting for the left call`;
+  qs(lo,p-1,nm(lo,hi),{lo,hi,pv:piv,p});
+  stack[stack.length-1].st=`right call next`;
+  push({tag:'CALL ↓',col:'#1b6fd1',lo,hi,pv:piv,p,text:`The left call has finished. Right part: <code>QuickSort(a, p + 1, high)</code> = <code>QuickSort(a, ${p} + 1, ${hi})</code> = <code>${nm(p+1,hi)}</code>.`});
+  stack[stack.length-1].st=`waiting for the right call`;
+  qs(p+1,hi,nm(lo,hi),{lo,hi,pv:piv,p});
+  ns[key]='done';stack.pop();
+  push({tag:'RETURN ↑',col:'#2e8b4f',lo:par?par.lo:null,hi:par?par.hi:null,pv:par?par.pv:null,p:par?par.p:null,text:`Both calls have finished, so <code>${nm(lo,hi)}</code> ends`+(parent?` and returns to <code>${parent}</code>.`:`. Back in Main, the array is sorted.`)});
+}
+push({tag:'START',col:'#555',text:`<code>Main</code> calls <code>QuickSort(a)</code>, which calls <code>QuickSort(a, 0, a.Length - 1)</code> = <code>QuickSort(a, 0, 5)</code>. So low = 0 and high = 5. The tree below fills in as the calls happen.`});
+qs(0,5,null,null);
+// render
+const svg=document.getElementById('tree');const W=164,H=52;
+function drawTree(e){
+  let s='';
+  for(const [a,b,l] of EDGES){const [x1,y1]=POS[a],[x2,y2]=POS[b];const called=e.ns[b]!='idle';
+    const [alo,ahi]=a.split(',').map(Number);const pp=(e.info[a]||{}).p;
+    const f=l=='left'?'left (low, p-1)':'right (p+1, high)';
+    let v='';if(pp!==undefined){v=l=='left'?`(${alo}, ${pp}-1) = (${alo}, ${pp-1})`:`(${pp}+1, ${ahi}) = (${pp+1}, ${ahi})`;}
+    const side=x2<x1?-1:1,an=side<0?'end':'start',tx=(x1+x2)/2+side*7,my=(y1+y2+H)/2;
+    s+=`<line x1=&quot;${x1}&quot; y1=&quot;${y1+H}&quot; x2=&quot;${x2}&quot; y2=&quot;${y2}&quot; stroke=&quot;${called?'#556':'#ccc'}&quot; stroke-width=&quot;${called?2.5:1.5}&quot; ${called?'':'stroke-dasharray=&quot;5 4&quot;'}/>`;
+    s+=`<text x=&quot;${tx}&quot; y=&quot;${my-9}&quot; text-anchor=&quot;${an}&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;${called?'#333':'#999'}&quot; font-family=&quot;Kalam&quot;>${f}</text>`;
+    s+=`<text x=&quot;${tx}&quot; y=&quot;${my+5}&quot; text-anchor=&quot;${an}&quot; font-size=&quot;11.5&quot; font-weight=&quot;700&quot; fill=&quot;${called?'#1b4f9c':'#aaa'}&quot; font-family=&quot;Consolas,monospace&quot;>${v}</text>`;}
+  for(const k in POS){const [x,y]=POS[k];const [lo,hi]=k.split(',').map(Number);const st=e.ns[k];const inf=e.info[k]||{};
+    let bg='#f4f4f4',bd='#bbb',dash='5 4',sw=1.5,l2='not called yet',tc='#999';
+    if(st!='idle'){dash='';sw=2.5;tc='#222';
+      if(inf.base){const one=inf.base=='one value';bg=one?'#e9defa':'#fbdde8';bd=one?'#6a3fc0':'#c2185b';l2='BASE: '+inf.base;}
+      else{bg='#e3eef9';bd='#1b6fd1';l2=inf.p!==undefined?`pivot lands at p = ${inf.p}`:(lo<hi?'partitioning…':'');}
+      if(st=='active'){sw=5;} }
+    s+=`<g><rect x=&quot;${x-W/2}&quot; y=&quot;${y}&quot; width=&quot;${W}&quot; height=&quot;${H}&quot; rx=&quot;9&quot; fill=&quot;${bg}&quot; stroke=&quot;${st=='active'?'#e0431f':bd}&quot; stroke-width=&quot;${sw}&quot; ${dash?`stroke-dasharray=&quot;${dash}&quot;`:''}/>`;
+    s+=`<text x=&quot;${x}&quot; y=&quot;${y+20}&quot; text-anchor=&quot;middle&quot; font-family=&quot;Consolas,monospace&quot; font-weight=&quot;700&quot; font-size=&quot;13&quot; fill=&quot;${tc}&quot;>QuickSort(a, ${lo}, ${hi})</text>`;
+    s+=`<text x=&quot;${x}&quot; y=&quot;${y+39}&quot; text-anchor=&quot;middle&quot; font-family=&quot;Kalam&quot; font-size=&quot;13&quot; fill=&quot;${tc}&quot;>${l2}</text>`;
+    if(st=='done')s+=`<circle cx=&quot;${x+W/2-4}&quot; cy=&quot;${y+4}&quot; r=&quot;10&quot; fill=&quot;#fff&quot; stroke=&quot;#2e8b4f&quot; stroke-width=&quot;2&quot;/><text x=&quot;${x+W/2-4}&quot; y=&quot;${y+9}&quot; text-anchor=&quot;middle&quot; font-size=&quot;14&quot; font-weight=&quot;700&quot; fill=&quot;#2e8b4f&quot;>&amp;#10003;</text>`;
+    s+='</g>';}
+  svg.innerHTML=s;
+}
+function drawArr(e){
+  let h='';
+  for(let k=0;k<6;k++){
+    const inr=e.lo!==null&amp;&amp;e.lo<=k&amp;&amp;k<=e.hi;let c='cell';
+    if(inr)c+=' in';if(e.fin.includes(k))c+=' fin';if(e.piv===k&amp;&amp;!e.fin.includes(k))c+=' piv';if(e.sw.includes(k))c+=' sw';if(e.j===k)c+=' jj';
+    if(e.tag=='PIVOT LANDS'&amp;&amp;e.sw.includes(k)&amp;&amp;e.fin.includes(k))c+=' in';
+    const m=[];if(e.lo!==null&amp;&amp;k===e.lo)m.push('low');if(e.lo!==null&amp;&amp;k===e.hi)m.push('high');if(e.i===k)m.push('i');if(e.j===k)m.push('j');
+    h+=`<div class=&quot;${c}&quot;><div class=&quot;v&quot;>${e.arr[k]}</div><div class=&quot;ix&quot;>${k}</div><div class=&quot;mk&quot;>${m.join('<br>')}</div></div>`;
+  }
+  document.getElementById('arr').innerHTML=h;
+  const dash='–';const lo=e.lo,hi=e.hi,p=e.p;
+  const items=[['low',lo],['high',hi],['pivot',e.pv],['i',e.i],['j',e.j],['p',p],['p - 1',p!==null?p-1:null],['p + 1',p!==null?p+1:null]];
+  document.getElementById('vars').innerHTML=items.map(([k,v])=>`<span><span class=&quot;k&quot;>${k} =</span> <b>${v===null?dash:v}</b></span>`).join('');
+}
+let cur=0;
+function render(){
+  const e=ev[cur];drawTree(e);drawArr(e);
+  const t=document.getElementById('tag');t.textContent=e.tag;t.style.background=e.col;
+  document.getElementById('text').innerHTML=e.text;
+  document.getElementById('log').innerHTML=e.log.map(x=>`<div>${x}</div>`).join('');
+  const st=e.stack.slice().reverse();
+  document.getElementById('stack').innerHTML=st.length?st.map((f,i)=>`<div class=&quot;${i==0?'top':''}&quot;>${f.call} <small>${f.st}</small></div>`).join(''):'<div><small>empty: Main has the sorted array</small></div>';
+  document.getElementById('ind').textContent=`Step ${cur+1} / ${ev.length}`;
+  document.getElementById('back').disabled=cur==0;document.getElementById('next').disabled=cur==ev.length-1;
+}
+document.getElementById('next').onclick=()=>{if(cur<ev.length-1){cur++;render()}};
+document.getElementById('back').onclick=()=>{if(cur>0){cur--;render()}};
+document.addEventListener('keydown',e=>{if(window.parent!==window)return;if(['ArrowRight','PageDown',' '].includes(e.key)){document.getElementById('next').click();e.preventDefault()}if(['ArrowLeft','PageUp'].includes(e.key)){document.getElementById('back').click();e.preventDefault()}});
+const EMB=window.parent!==window;
+if(EMB){document.body.classList.add('emb');}
+window.stepNext=()=>{if(cur<ev.length-1){cur++;render();return true}return false};
+window.stepPrev=()=>{if(cur>0){cur--;render();return true}return false};
+window.setStep=n=>{cur=Math.max(0,Math.min(ev.length-1,n<0?ev.length-1:n));render()};
+window.stepInfo=()=>({cur:cur+1,total:ev.length});
+document.getElementById('showAll').onclick=()=>{cur=ev.length-1;render()};
+if(EMB){document.addEventListener('keydown',e=>{const p=window.parent.document;
+  if(['ArrowRight','PageDown',' '].includes(e.key)){p.getElementById('nextBtn').click();e.preventDefault();e.stopPropagation()}
+  if(['ArrowLeft','PageUp'].includes(e.key)){p.getElementById('prevBtn').click();e.preventDefault();e.stopPropagation()}},true);}
+render();
+</script></body></html>
+"></iframe>
+</section>
+<section class="slide">
+<h2 class="slide-title">6 — Write It: Main and an Empty Method</h2>
+<p class="slide-sub">Same shape as before: make the list, print it, call the sort, print again</p>
+<div class="twocol"><div><pre class="code">using System;
+ 
+class Program
+{
+    static void Main()
+    {
+        int[] list = { 5, 1, 4, 2, 8, 3 };
+ 
+        Console.WriteLine("Before: " + string.Join(", ", list));
+        QuickSort(list);
+        Console.WriteLine("After:  " + string.Join(", ", list));
+    }
+ 
+<span class="newl">    static void QuickSort(int[] a)</span>
+<span class="newl">    {</span>
+<span class="newl">    }</span>
+}</pre></div><div><div class="panel" style=""><ul class="notes"><li><code>Main</code> has the same shape as for Bubble and Selection Sort.</li><li>The caller only passes the array: <code>QuickSort(list)</code>. It should not have to say which positions to sort.</li><li>We write the empty method first, so the call compiles.</li><li>Before and After show the same numbers, because the method does nothing yet.</li><li>This method will turn out to be a short <i>wrapper</i>. Next we write the real <code>QuickSort</code>, then <code>Partition</code>, and last the <code>Swap</code> helper.</li></ul></div></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">7 — Write It: The Recursive QuickSort</h2>
+<p class="slide-sub">Partition, then do the same on the left side and on the right side</p>
+<div class="twocol"><div><pre class="code">    static void QuickSort(int[] a)
+<span class="newl">    {</span>
+<span class="newl">        QuickSort(a, 0, a.Length - 1);</span>
+    }
+ 
+<span class="newl">    static void QuickSort(int[] a, int low, int high)</span>
+<span class="newl">    {</span>
+<span class="newl">        if (low &lt; high)</span>
+<span class="newl">        {</span>
+<span class="newl">            int p = Partition(a, low, high);</span>
+<span class="newl">            QuickSort(a, low, p - 1);</span>
+<span class="newl">            QuickSort(a, p + 1, high);</span>
+<span class="newl">        }</span>
+<span class="newl">    }</span></pre></div><div><div class="panel"><ul class="notes"><li>There are two methods named <code>QuickSort</code>. C# allows this when the parameters differ. It is called <b>overloading</b>.</li><li><code>QuickSort(int[] a)</code> takes only the array. It calls the second method with the whole array: <code>QuickSort(a, 0, a.Length - 1)</code>.</li><li><code>QuickSort(int[] a, int low, int high)</code> sorts positions <code>low</code> to <code>high</code>, and it calls itself.</li><li><b>Base case:</b> <code>if (low &lt; high)</code>. A part with one value, or none, does nothing and the calls stop.</li><li>Otherwise <code>Partition</code> places the pivot at <code>p</code>. Then we sort everything left of <code>p</code> and everything right of <code>p</code>. The pivot at <code>p</code> is never touched again.</li><li>Visual Studio underlines <code>Partition</code>: <b>CS0103</b>, the name does not exist yet. We wrote the call we wish we had. Writing <code>Partition</code> is the next step.</li></ul></div></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">8 — Write It: Partition, the Setup</h2>
+<p class="slide-sub">The pivot, the boundary of the smaller zone, and the sweep</p>
+<div class="twocol"><div><pre class="code">    static int Partition(int[] a, int low, int high)
+    {
+        int pivot = a[high];
+        int i = low - 1;
+ 
+        for (int j = low; j &lt; high; j++)
+        {
+            <span class="cm">// is a[j] smaller than the pivot?</span>
+        }
+ 
+        <span class="cm">// put the pivot in its place</span>
+        return 0;   <span class="cm">// temporary</span>
+    }</pre></div><div><div class="panel" style=""><ul class="notes"><li><code>Partition</code> works on positions <code>low</code> to <code>high</code> and returns the position where the pivot ends up.</li><li>The <b>pivot</b> is the last value, <code>a[high]</code>.</li><li><code>i</code> is the last position of the smaller zone. The zone starts empty, so <code>i</code> is <code>low - 1</code>, one step before the part.</li><li><code>j</code> sweeps from <code>low</code> up to, but not including, <code>high</code>. The pivot itself is not compared with itself.</li><li>The temporary <code>return 0;</code> keeps the method compiling for now. The squiggle under <code>Partition</code> in <code>QuickSort</code> is gone.</li></ul></div></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">9 — Write It: Partition, the Sweep and the Landing</h2>
+<p class="slide-sub">Grow the smaller zone, then drop the pivot in right after it</p>
+<div class="twocol three"><div><pre class="code">    static int Partition(int[] a, int low, int high)
+    {
+        int pivot = a[high];
+        int i = low - 1;
+ 
+        for (int j = low; j &lt; high; j++)
+        {
+<span class="newl">            if (a[j] &lt; pivot)</span>
+<span class="newl">            {</span>
+<span class="newl">                i++;</span>
+<span class="newl">                Swap(a, i, j);</span>
+<span class="newl">            }</span>
+        }
+<span class="newl"> </span>
+<span class="newl">        Swap(a, i + 1, high);</span>
+        return i + 1;
+    }</pre></div><div><div class="panel" style=""><ul class="notes"><li>If <code>a[j]</code> is smaller than the pivot, the smaller zone grows by one: <code>i++</code>.</li><li>Then <code>Swap(a, i, j)</code> brings that small value into the zone. The value that was there goes out to position <code>j</code>.</li><li>If <code>a[j]</code> is not smaller, we do nothing. The sweep just moves on.</li><li>After the sweep, positions <code>low</code> to <code>i</code> hold all the smaller values.</li><li>The pivot swaps with the value right after them, <code>i + 1</code>. That is its final place, and we return it.</li><li>Visual Studio underlines <code>Swap</code>: <b>CS0103</b>, it does not exist yet. We write it next.</li></ul></div></div><div><div class="panel"><ul class="notes"><li><strong>Key reasoning:</strong> i tells us the last index occupied by a smaller value. Therefore the pivot's landing position is always <strong>i+1</strong>.</li><li>That is why the code does not guess a position. It computes the position from the boundary created by the scan.</li></ul></div></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">10 — Write It: A Swap Helper</h2>
+<p class="slide-sub">Quick Sort swaps in two places, so we write the swap once</p>
+<div class="twocol"><div><pre class="code">    static void Swap(int[] a, int x, int y)
+<span class="newl">    {</span>
+<span class="newl">        int temp = a[x];</span>
+<span class="newl">        a[x] = a[y];</span>
+<span class="newl">        a[y] = temp;</span>
+<span class="newl">    }</span></pre></div><div><div class="panel"><ul class="notes"><li><code>Partition</code> calls <code>Swap</code> twice: in the sweep, and when the pivot lands.</li><li>So the three <code>temp</code> lines go into one small method. It takes the array and the two positions to swap.</li><li>It is the same <code>temp</code> idea as in Bubble Sort.</li><li>The squiggle under <code>Swap</code> is gone. Run the program:</li><li><code>Before: 5, 1, 4, 2, 8, 3</code> then <code>After:  1, 2, 3, 4, 5, 8</code>.</li></ul></div></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">11 — The Whole Program</h2>
+<p class="slide-sub">Everything together: Program.cs</p>
+<div class="twocol eq"><div><pre class="code" style="font-size:11px;line-height:1.35;padding:8px 12px;">using System;
+ 
+class Program
+{
+    static void Main()
+    {
+        int[] list = { 5, 1, 4, 2, 8, 3 };
+ 
+        Console.WriteLine("Before: " + string.Join(", ", list));
+        QuickSort(list);
+        Console.WriteLine("After:  " + string.Join(", ", list));
+    }
+ 
+    static void QuickSort(int[] a)
+    {
+        QuickSort(a, 0, a.Length - 1);
+    }
+ 
+    static void QuickSort(int[] a, int low, int high)
+    {
+        if (low &lt; high)
+        {
+            int p = Partition(a, low, high);
+            QuickSort(a, low, p - 1);
+            QuickSort(a, p + 1, high);
+        }
+    }
+ </pre></div><div><pre class="code" style="font-size:11px;line-height:1.35;padding:8px 12px;">    static void Swap(int[] a, int x, int y)
+    {
+        int temp = a[x];
+        a[x] = a[y];
+        a[y] = temp;
+    }
+ 
+    static int Partition(int[] a, int low, int high)
+    {
+        int pivot = a[high];
+        int i = low - 1;
+ 
+        for (int j = low; j &lt; high; j++)
+        {
+            if (a[j] &lt; pivot)
+            {
+                i++;
+                Swap(a, i, j);
+            }
+        }
+ 
+        Swap(a, i + 1, high);
+        return i + 1;
+    }
+}</pre></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">12 — Worst Case: A Sorted List</h2>
+<p class="slide-sub">With the last value as pivot, a sorted list splits as badly as possible</p><div class="split"><div class="split-main">
+<div style="font-family:Kalam,cursive;font-weight:700;color:var(--acc);margin:4px 0 0 0;text-align:center;">Sorted list [1, 2, 3, 4, 5]</div><table class="minitable"><tr><th>Call</th><th>Pivot</th><th>Comparisons</th><th>Pivot lands</th><th>Array after</th></tr><tr><td class="rowhead">QuickSort(a, 0, 4)</td><td>5</td><td>4</td><td>position 4</td><td>[1, 2, 3, 4, 5]</td></tr><tr><td class="rowhead">QuickSort(a, 0, 3)</td><td>4</td><td>3</td><td>position 3</td><td>[1, 2, 3, 4, 5]</td></tr><tr><td class="rowhead">QuickSort(a, 0, 2)</td><td>3</td><td>2</td><td>position 2</td><td>[1, 2, 3, 4, 5]</td></tr><tr><td class="rowhead">QuickSort(a, 0, 1)</td><td>2</td><td>1</td><td>position 1</td><td>[1, 2, 3, 4, 5]</td></tr></table></div><div class="split-side"><div class="panel"><ul class="notes"><li>The pivot is the biggest value every time, so every other value is smaller and goes into the smaller zone.</li><li>The pivot lands at the far right. The left part is only one value shorter than before. The right part is empty.</li><li>So we make n − 1 partitions, with n − 1, n − 2, … 1 comparisons: 4 + 3 + 2 + 1 = 10.</li><li>That is n(n − 1) / 2: <b>O(n²)</b>, as slow as Selection Sort.</li><li>A reverse-sorted list does the same thing: the pivot is always the smallest.</li></ul></div></div></div>
+</section>
+<section class="slide tight">
+<h2 class="slide-title">13 — Best Case: Balanced Splits</h2>
+<p class="slide-sub">When the pivot lands near the middle, each part is about half the size of the one before</p>
+<div class="split"><div class="split-main"><div class="halve"><span>n</span>→<span>n/2</span>→<span>n/4</span>→<span>n/8</span>→<span>…</span>→<span>1</span></div><div class="lvl"><div class="lvl-head"><b>Level 1</b>: 1 part of 15 values <span class="lvl-sub">— pivot lands in the middle. <b>1 × (15 − 1) = 14</b> comparisons</span></div><div class="sort-wrap"><div class="sort-row"><div class="sort-cell xs">1</div><div class="sort-cell xs">2</div><div class="sort-cell xs">3</div><div class="sort-cell xs">4</div><div class="sort-cell xs">5</div><div class="sort-cell xs">6</div><div class="sort-cell xs">7</div><div class="sort-cell xs nswap pvl">8</div><div class="sort-cell xs pvr">9</div><div class="sort-cell xs">10</div><div class="sort-cell xs">11</div><div class="sort-cell xs">12</div><div class="sort-cell xs">13</div><div class="sort-cell xs">14</div><div class="sort-cell xs">15</div></div></div></div><div class="lvl"><div class="lvl-head"><b>Level 2</b>: 2 parts of 7 values <span class="lvl-sub">— each part picks its middle pivot. <b>2 × (7 − 1) = 12</b> comparisons</span></div><div class="sort-wrap"><div class="sort-row"><div class="sort-cell xs">1</div><div class="sort-cell xs">2</div><div class="sort-cell xs">3</div><div class="sort-cell xs nswap pvl">4</div><div class="sort-cell xs pvr">5</div><div class="sort-cell xs">6</div><div class="sort-cell xs">7</div><div class="sort-cell xs sorted pvl">8</div><div class="sort-cell xs pvr">9</div><div class="sort-cell xs">10</div><div class="sort-cell xs">11</div><div class="sort-cell xs nswap pvl">12</div><div class="sort-cell xs pvr">13</div><div class="sort-cell xs">14</div><div class="sort-cell xs">15</div></div></div></div><div class="lvl"><div class="lvl-head"><b>Level 3</b>: 4 parts of 3 values <span class="lvl-sub">— again the middle. <b>4 × (3 − 1) = 8</b> comparisons</span></div><div class="sort-wrap"><div class="sort-row"><div class="sort-cell xs">1</div><div class="sort-cell xs nswap pvl">2</div><div class="sort-cell xs pvr">3</div><div class="sort-cell xs sorted pvl">4</div><div class="sort-cell xs pvr">5</div><div class="sort-cell xs nswap pvl">6</div><div class="sort-cell xs pvr">7</div><div class="sort-cell xs sorted pvl">8</div><div class="sort-cell xs pvr">9</div><div class="sort-cell xs nswap pvl">10</div><div class="sort-cell xs pvr">11</div><div class="sort-cell xs sorted pvl">12</div><div class="sort-cell xs pvr">13</div><div class="sort-cell xs nswap pvl">14</div><div class="sort-cell xs pvr">15</div></div></div></div><div class="lvl"><div class="lvl-head"><b>Level 4</b>: 8 parts of 1 value <span class="lvl-sub">— one value: stop. <b>8 × (1 − 1) = 0</b> comparisons</span></div><div class="sort-wrap"><div class="sort-row"><div class="sort-cell xs single">1</div><div class="sort-cell xs sorted pvl">2</div><div class="sort-cell xs single pvr">3</div><div class="sort-cell xs sorted pvl">4</div><div class="sort-cell xs single pvr">5</div><div class="sort-cell xs sorted pvl">6</div><div class="sort-cell xs single pvr">7</div><div class="sort-cell xs sorted pvl">8</div><div class="sort-cell xs single pvr">9</div><div class="sort-cell xs sorted pvl">10</div><div class="sort-cell xs single pvr">11</div><div class="sort-cell xs sorted pvl">12</div><div class="sort-cell xs single pvr">13</div><div class="sort-cell xs sorted pvl">14</div><div class="sort-cell xs single pvr">15</div></div></div></div><div class="formula-box" style="margin-top:10px;"><b>How did we get the numbers?</b> A part with <b>m</b> values makes <b>m − 1</b> comparisons: every value is compared with the pivot except the pivot itself. Multiply by the number of parts at that level.</div><div class="legend"><span><span class="sw nswap"></span>pivot of a part</span><span><span class="sw s"></span>pivot already in final place</span><span><span class="sw single"></span>one value: stops</span></div></div><div class="split-side"><div class="panel"><ul class="notes"><li>Start with 15 values. The first pivot lands in the middle, so two parts of <b>about n / 2</b> remain.</li><li>Each of those splits into parts of about <b>n / 4</b>, then <b>n / 8</b>, and so on, until a part has <b>1</b> value.</li><li>Halving 15 values takes <b>4 levels</b> to reach 1. In general, the number of levels is <b>log₂ n</b>.</li><li>At each level, every value is compared with its part's pivot about once: about <b>n</b> comparisons per level.</li><li>Here: 14 + 12 + 8 + 0 = <b>34</b> comparisons, against 15 × 14 / 2 = <b>105</b> for Selection Sort.</li><li>Total: <b>n × log₂ n</b>, which is <b>O(n log n)</b>. For 1,024 values: about 10,240 against 523,776.</li></ul></div></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">14 — Choosing the Pivot</h2>
+<p class="slide-sub">The last value is easy to code, but a sorted list punishes it</p><div class="split"><div class="split-main">
+<div class="grid"><div class="panel"><div class="panel-head"><div class="num">1</div><h3>Last value</h3></div><ul class="notes"><li>What we coded. Simple.</li><li>Worst case on sorted or reverse-sorted lists, which are common in real data.</li></ul></div><div class="panel"><div class="panel-head"><div class="num">2</div><h3>Random value</h3></div><ul class="notes"><li>Swap a random value into the last place, then partition as before.</li><li>No particular input is always bad.</li></ul></div><div class="panel"><div class="panel-head"><div class="num">3</div><h3>Median of three</h3></div><ul class="notes"><li>Look at the first, middle and last values. Use the middle one in size as the pivot.</li><li>Fixes sorted and reverse-sorted lists.</li></ul></div></div></div><div class="split-side"><div class="panel" style="margin-top:10px;"><ul class="notes"><li>Only one line changes: how we pick <code>pivot</code> and move it to <code>a[high]</code>. The rest of <code>Partition</code> stays the same.</li><li>A bad pivot gives O(n²). A good pivot gives O(n log n). Real libraries pick the pivot carefully for this reason.</li></ul></div></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">15 — Quick Sort Against the Ones Before</h2>
+<p class="slide-sub">Same list, same question: how much work?</p><div class="split"><div class="split-main">
+<table class="minitable"><tr><th>List</th><th>Bubble (with flag)</th><th>Selection</th><th>Quick (last pivot)</th></tr><tr><td class="rowhead">[5, 1, 4, 2, 8, 3]  (our example)</td><td>14 comps, 7 swaps</td><td>15 comps, 5 swaps</td><td>9 comps, 5 swaps</td></tr><tr><td class="rowhead">[1, 2, 3, 4, 5, 6]  (already sorted)</td><td>5 comps, 0 swaps</td><td>15 comps, 0 swaps</td><td>15 comps (worst case)</td></tr></table><table class="minitable"><tr><th></th><th>Bubble</th><th>Selection</th><th>Quick</th></tr><tr><td class="rowhead">Best / average time</td><td>O(n) / O(n²)</td><td>O(n²) / O(n²)</td><td>O(n log n) / O(n log n)</td></tr><tr><td class="rowhead">Worst time</td><td>O(n²)</td><td>O(n²)</td><td>O(n²), on bad pivots</td></tr><tr><td class="rowhead">Extra memory</td><td>O(1)</td><td>O(1)</td><td>O(log n) for the calls, on average</td></tr><tr><td class="rowhead">Stable?</td><td>Yes</td><td>No</td><td>No</td></tr></table></div><div class="split-side"><div class="panel"><div class="panel-head"><div class="num pill">Heads up</div><h3>What does “stable” mean?</h3></div><ul class="notes"><li>A sorting algorithm is <b>stable</b> if equal-valued items keep their original relative order.</li><li>Example: <code>5A, 2, 5B</code> should finish as <code>2, 5A, 5B</code> if the sort is stable.</li><li>Quick Sort is generally <b>not stable</b> because its swaps can move equal values past one another.</li></ul></div><div class="panel" style="margin-top:12px;"><ul class="notes"><li>On 6 values the difference is small. It grows fast: for 1,024 values, about 10,240 comparisons against 523,776.</li><li>The sorted list is the one place where Quick Sort with the last pivot is no better than Selection Sort, and Bubble Sort wins.</li><li>Quick Sort rearranges values by long swaps, so equal values can change order: it is not stable.</li></ul></div></div></div>
+</section>
+<section class="slide">
+<h2 class="slide-title">16 — Check Yourself</h2>
+<p class="slide-sub">Answer each one before opening the answer</p>
+<div class="qa-card"><div class="q">Q1. What is the pivot, and where does it end up after a partition?</div><div class="a"><b>Answer:</b> The pivot is the value we split around. After the partition it is in its final sorted place, with smaller values on its left and bigger values on its right.</div></div><div class="qa-card"><div class="q">Q2. Why does <code>QuickSort</code> stop when <code>low &lt; high</code> is false?</div><div class="a"><b>Answer:</b> Then the part has one value or none. It is already sorted, so there is nothing to do. This is the base case of the recursion.</div></div><div class="qa-card"><div class="q">Q3. Which list is the worst case when the pivot is the last value, and how many comparisons does it need?</div><div class="a"><b>Answer:</b> An already sorted list (or a reverse-sorted one). Each partition removes only one value, so it needs n(n − 1) / 2 comparisons: O(n²).</div></div><div class="qa-card"><div class="q">Q4. Why is the best and average case O(n log n)?</div><div class="a"><b>Answer:</b> Each level of calls does about n comparisons in total, and balanced splits give about log n levels.</div></div>
+</section>
+</main>
+</div>
+<div class="navbar">
+<button class="nav-btn" id="prevBtn">← Back</button>
+<span class="step-indicator" id="stepIndicator">1 / 17</span>
+<button class="nav-btn primary" id="nextBtn">Next →</button>
+</div>
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const railItems = document.querySelectorAll('.rail-item');
+  const stage = document.querySelector('.stage');
+  let cur = 0;
+  const shown = new Array(slides.length).fill(0);
+  function rvs(i){ return slides[i].querySelectorAll('.rv'); }
+  function tf(i){ const f=slides[i].querySelector('iframe[data-trace]'); return (f&&f.contentWindow&&f.contentWindow.stepNext)?f.contentWindow:null; }
+  function paint(i){
+    const r = rvs(i); const w = tf(i);
+    r.forEach((e,k)=>{ e.classList.toggle('on', k<shown[i]); e.classList.toggle('latest', k===shown[i]-1 && !e.classList.contains('grid')); });
+    let t = r.length ? ' · step ' + shown[i] + '/' + r.length : '';
+    if(w){ const q=w.stepInfo(); t=' · trace step ' + q.cur + '/' + q.total; }
+    document.getElementById('stepIndicator').textContent = (i+1) + ' / ' + slides.length + t;
+    document.getElementById('prevBtn').disabled = (i===0 && shown[i]===0);
+    document.getElementById('nextBtn').disabled = (i===slides.length-1 && shown[i]>=r.length);
+  }
+  function show(i, atEnd){
+    if(i<0) i=0; if(i>=slides.length) i=slides.length-1;
+    slides.forEach((s,idx)=> s.classList.toggle('active', idx===i));
+    railItems.forEach((r,idx)=> r.classList.toggle('active', idx===i));
+    cur = i;
+    shown[i] = atEnd ? rvs(i).length : 0;
+    stage.scrollTop = 0; stage.scrollLeft = 0;
+    const w = tf(i); if(w){ w.setStep(atEnd?-1:0); }
+    paint(i);
+  }
+  function next(){
+    const w = tf(cur); if(w && w.stepNext()){ paint(cur); return; }
+    if(shown[cur] < rvs(cur).length){ shown[cur]++; paint(cur); }
+    else show(cur+1,false);
+  }
+  function prev(){
+    const w = tf(cur); if(w && w.stepPrev()){ paint(cur); return; }
+    if(shown[cur] > 0){ shown[cur]--; paint(cur); }
+    else show(cur-1,true);
+  }
+  document.getElementById('nextBtn').addEventListener('click', next);
+  document.getElementById('prevBtn').addEventListener('click', prev);
+  railItems.forEach((r,idx)=> r.addEventListener('click', ()=>show(idx,false)));
+  document.addEventListener('keydown', (e)=>{
+    if(e.key==='ArrowRight' || e.key==='PageDown' || e.key===' '){ next(); e.preventDefault(); }
+    if(e.key==='ArrowLeft' || e.key==='PageUp'){ prev(); e.preventDefault(); }
+  });
+  show(0,false);
+</script>
+</body>
+</html>
